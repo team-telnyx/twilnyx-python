@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "twilnyx"
+version = "0.1.0"
+authors = [
+  { name="Telnyx", email="support@telnyx.com" },
+]
+description = "A proxy that redirects Twilio SDK calls to Telnyx's API"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "twilio>=9.0.0",
+    "requests>=2.31.0"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/team-telnyx/twilnyx-python"
+"Bug Tracker" = "https://github.com/team-telnyx/twilnyx-python/issues"
