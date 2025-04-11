@@ -29,7 +29,9 @@ To use Telnyx instead, just add:
 import twilnyx
 twilnyx.use_telnyx(
     api_key='YOUR_TELNYX_API_KEY',
-    voice_profile_id='YOUR_VOICE_PROFILE_ID'  # From Telnyx Portal > Voice > API Profiles
+    voice_profile_id='YOUR_VOICE_PROFILE_ID',  # From Telnyx Portal > Voice > API Profiles
+    connection_id='YOUR_CONNECTION_ID',  # From Telnyx Portal > Call Control > Apps
+    debug=False  # Set to True for detailed logging
 )
 
 # Then use your existing Twilio code as-is!
@@ -110,12 +112,22 @@ from twilio.rest import Client
 
 ## Required Setup
 
-1. **Telnyx Voice Profile** (Required):
+1. **Telnyx API Key** (Required):
+   - Create in Telnyx Portal > Auth > API Keys
+   - Used for authentication with Telnyx API
+   - Pass to `use_telnyx()` as `api_key`
+
+2. **Telnyx Voice Profile** (Required):
    - Create in Telnyx Portal > Voice > API Profiles
    - Used for outbound calling configuration
-   - Pass the ID to `use_telnyx()`
+   - Pass the ID to `use_telnyx()` as `voice_profile_id`
 
-2. **Your Webhook Server**:
+3. **Telnyx Call Control App** (Required for calls):
+   - Create in Telnyx Portal > Call Control > Apps
+   - Configure with your webhook URL
+   - Pass the ID to `use_telnyx()` as `connection_id`
+
+4. **Your Webhook Server**:
    - Keep using your existing webhook server
    - It should return TwiML just like with Twilio
    - No changes needed to your webhooks
@@ -127,6 +139,9 @@ from twilio.rest import Client
 - No code changes needed
 - Automatic parameter mapping
 - Proper response conversion
+- Detailed logging for debugging
+- Support for calls and messages
+- Error handling and reporting
 
 ## Contributing
 
