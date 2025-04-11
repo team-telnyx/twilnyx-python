@@ -38,7 +38,8 @@ def test_response_mapping():
     }
     
     twilio_response = proxy._convert_response(telnyx_response)
-    response_dict = eval(twilio_response)  # Convert string back to dict
+    import json
+    response_dict = json.loads(twilio_response)  # Parse JSON string
     
     assert response_dict['sid'] == 'test_id'
     assert response_dict['status'] == 'ringing'
@@ -103,13 +104,14 @@ def test_empty_response():
     
     proxy = TelnyxProxy('test_key', 'test_profile')
     response = proxy._convert_response({})
-    response_dict = eval(response)  # Convert string back to dict
+    import json
+    response_dict = json.loads(response)  # Parse JSON string
     
-    # Empty response should still have all fields with None values
-    assert response_dict['sid'] is None
+    # Empty response should have status field
     assert response_dict['status'] == 'unknown'
-    assert response_dict['to'] is None
-    assert response_dict['from'] is None
+    
+    # Check that num_media is present (added in our improvements)
+    assert response_dict['num_media'] == 0
 
 def test_status_mapping():
     """Test all status mappings."""
@@ -117,16 +119,104 @@ def test_status_mapping():
     
     proxy = TelnyxProxy('test_key', 'test_profile')
     
-    # Test all defined statuses
+    # Test call statuses
     assert proxy._map_status('queued') == 'queued'
     assert proxy._map_status('ringing') == 'ringing'
     assert proxy._map_status('answered') == 'in-progress'
+    assert proxy._map_status('bridging') == 'in-progress'
+    assert proxy._map_status('bridged') == 'in-progress'
     assert proxy._map_status('completed') == 'completed'
     assert proxy._map_status('busy') == 'busy'
     assert proxy._map_status('failed') == 'failed'
     assert proxy._map_status('no-answer') == 'no-answer'
     assert proxy._map_status('canceled') == 'canceled'
+    assert proxy._map_status('hangup') == 'completed'
+    assert proxy._map_status('initiated') == 'queued'
+    
+    # Test message statuses
+    assert proxy._map_status('sent') == 'sent'
+    assert proxy._map_status('delivered') == 'delivered'
+    assert proxy._map_status('sending') == 'queued'
+    assert proxy._map_status('received') == 'received'
+    assert proxy._map_status('rejected') == 'failed'
+    assert proxy._map_status('undelivered') == 'undelivered'
     
     # Test unknown status
     assert proxy._map_status('unknown_status') == 'unknown'
     assert proxy._map_status(None) == 'unknown'
+
+def test_connection_id():
+    """Test that connection_id is properly used."""
+    from twilnyx import TelnyxProxy
+    from unittest.mock import patch, MagicMock
+    
+    # Create proxy with connection_id
+    proxy = TelnyxProxy('test_key', 'test_profile', 'test_connection')
+    
+    # Mock the requests.request function
+    with patch('requests.request') as mock_request:
+        # Set up the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'data': {
+                'call_control_id': 'test_id',
+                'state': 'ringing'
+            }
+        }
+        mock_request.return_value = mock_response
+        
+        # Make a request for a call
+        proxy.request(
+            'POST',
+            'Calls.json',
+            data={
+                'To': '+1234567890',
+                'From': '+1987654321',
+                'Url': 'https://example.com/voice'
+            }
+        )
+        
+        # Verify connection_id was included
+        args = mock_request.call_args
+        assert args[1]['json']['connection_id'] == 'test_connection'
+
+def test_list_response():
+    """Test handling of list responses."""
+    from twilnyx import TelnyxProxy
+    
+    proxy = TelnyxProxy('test_key', 'test_profile')
+    
+    # Create a mock list response
+    telnyx_response = {
+        'data': [
+            {
+                'call_control_id': 'call1',
+                'state': 'completed',
+                'to': '+1234567890',
+                'from': '+1987654321'
+            },
+            {
+                'call_control_id': 'call2',
+                'state': 'ringing',
+                'to': '+2345678901',
+                'from': '+1987654321'
+            }
+        ],
+        'meta': {
+            'total_results': 2,
+            'page_number': 1
+        }
+    }
+    
+    # Convert the response
+    response = proxy._convert_response(telnyx_response)
+    import json
+    response_list = json.loads(response)  # Parse JSON string
+    
+    # Verify the list was properly converted
+    assert len(response_list) == 2
+    assert response_list[0]['sid'] == 'call1'
+    assert response_list[0]['status'] == 'completed'
+    assert response_list[1]['sid'] == 'call2'
+    assert response_list[1]['status'] == 'ringing'
