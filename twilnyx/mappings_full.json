@@ -1,0 +1,340 @@
+{
+  "parameter_mappings": {
+    "To": "to",
+    "From": "from",
+    "Url": "webhook_url",
+    "Method": "webhook_method",
+    "StatusCallback": "status_callback_url",
+    "StatusCallbackMethod": "status_callback_method",
+    "MachineDetection": "answering_machine_detection",
+    "Record": "record_audio",
+    "Timeout": "timeout_secs",
+    "CallerId": "from",
+    "RecordingChannels": "channels",
+    "RecordingStatusCallback": "recording_webhook_url",
+    "RecordingStatusCallbackMethod": "recording_webhook_method",
+    "Body": "text",
+    "MediaUrl": "media_urls",
+    "ApplicationSid": "client_state",
+    "FallbackUrl": "fallback_url",
+    "FallbackMethod": "fallback_method",
+    "Action": "action_url",
+    "FinishOnKey": "finish_on_key",
+    "NumDigits": "num_digits",
+    "Transcribe": "transcribe",
+    "TranscribeCallback": "transcribe_callback_url",
+    "PlayBeep": "play_beep",
+    "MaxLength": "max_length",
+    "Trim": "trim",
+    "RecordingStatusCallback": "recording_status_callback_url",
+    "RecordingStatusCallbackMethod": "recording_status_callback_method",
+    "RecordingStatusCallbackEvent": "recording_status_callback_event",
+    "TranscriptionType": "transcription_type",
+    "TranscriptionLanguage": "transcription_language",
+    "TranscriptionCallbackMethod": "transcription_callback_method",
+    "TranscriptionCallback": "transcription_callback_url",
+    "QueueName": "queue_name",
+    "QueueSid": "queue_id",
+    "ReservationSid": "reservation_id",
+    "PostWorkActivitySid": "post_work_activity_id",
+    "EndConferenceOnExit": "end_conference_on_exit",
+    "StartConferenceOnEnter": "start_conference_on_enter",
+    "WaitUrl": "wait_url",
+    "WaitMethod": "wait_method",
+    "MaxParticipants": "max_participants",
+    "Reason": "reason",
+    "Length": "length",
+    "Language": "language",
+    "Voice": "voice",
+    "Loop": "loop",
+    "Digits": "digits",
+    "PaymentConnector": "payment_connector",
+    "TokenType": "token_type",
+    "ChargeAmount": "charge_amount",
+    "Currency": "currency",
+    "Description": "description",
+    "ValidCardTypes": "valid_card_types",
+    "PaymentMethod": "payment_method",
+    "StatusCallbackEvent": "status_callback_event",
+    "ReferUrl": "refer_url",
+    "ReferMethod": "refer_method",
+    "Identity": "identity",
+    "SiprecUrl": "siprec_url",
+    "Name": "name",
+    "Track": "track",
+    "Direction": "direction",
+    "MediaRegion": "media_region",
+    "StatusCallbackUrl": "status_callback_url"
+  },
+  "special_handling": {
+    "MachineDetection": {
+      "type": "function",
+      "description": "Convert 'enable' to 'detect', otherwise lowercase",
+      "examples": {
+        "Enable": "detect",
+        "Disable": "disable"
+      }
+    },
+    "Record": {
+      "type": "boolean",
+      "description": "Convert string 'true'/'false' to boolean values",
+      "examples": {
+        "true": true,
+        "false": false
+      }
+    },
+    "Timeout": {
+      "type": "integer",
+      "description": "Convert digit strings to integers",
+      "examples": {
+        "30": 30
+      }
+    },
+    "NumDigits": {
+      "type": "integer",
+      "description": "Convert digit strings to integers"
+    },
+    "MaxLength": {
+      "type": "integer",
+      "description": "Convert digit strings to integers"
+    },
+    "MaxParticipants": {
+      "type": "integer",
+      "description": "Convert digit strings to integers"
+    },
+    "Length": {
+      "type": "integer",
+      "description": "Convert digit strings to integers"
+    },
+    "Loop": {
+      "type": "integer",
+      "description": "Convert digit strings to integers"
+    },
+    "PlayBeep": {
+      "type": "boolean",
+      "description": "Convert string 'true'/'false' to boolean values"
+    },
+    "Trim": {
+      "type": "boolean",
+      "description": "Convert string 'true'/'false' to boolean values"
+    },
+    "Transcribe": {
+      "type": "boolean",
+      "description": "Convert string 'true'/'false' to boolean values"
+    },
+    "EndConferenceOnExit": {
+      "type": "boolean",
+      "description": "Convert string 'true'/'false' to boolean values"
+    },
+    "StartConferenceOnEnter": {
+      "type": "boolean",
+      "description": "Convert string 'true'/'false' to boolean values"
+    }
+  },
+  "status_mappings": {
+    "call_states": {
+      "queued": "queued",
+      "ringing": "ringing",
+      "answered": "in-progress",
+      "bridging": "in-progress",
+      "bridged": "in-progress",
+      "completed": "completed",
+      "busy": "busy",
+      "failed": "failed",
+      "no-answer": "no-answer",
+      "canceled": "canceled",
+      "hangup": "completed",
+      "initiated": "queued",
+      "leaving-bridge": "in-progress",
+      "transferring": "in-progress"
+    },
+    "message_states": {
+      "sent": "sent",
+      "delivered": "delivered",
+      "sending": "queued",
+      "queued": "queued",
+      "failed": "failed",
+      "received": "received",
+      "rejected": "failed",
+      "undelivered": "undelivered"
+    }
+  },
+  "texml_templates": {
+    "call": {
+      "element": "Dial",
+      "attributes": ["callerId", "action", "method", "timeout", "record", "hangupOnStar", "timeLimit"],
+      "children": [
+        {
+          "element": "Number",
+          "attributes": ["url", "method", "statusCallback", "statusCallbackMethod"],
+          "content": "to"
+        }
+      ]
+    },
+    "message": {
+      "element": "Say",
+      "attributes": ["voice", "language", "loop"],
+      "content": "text"
+    },
+    "media": {
+      "element": "Play",
+      "attributes": ["loop"],
+      "content": "media_url"
+    },
+    "gather": {
+      "element": "Gather",
+      "attributes": ["action", "method", "timeout", "finishOnKey", "numDigits"],
+      "children": [
+        {
+          "element": "Say",
+          "content": "prompt_text"
+        }
+      ]
+    },
+    "record": {
+      "element": "Record",
+      "attributes": ["action", "method", "timeout", "finishOnKey", "maxLength", "playBeep", "trim", "recordingStatusCallback", "recordingStatusCallbackMethod", "transcribe", "transcribeCallback"]
+    },
+    "hangup": {
+      "element": "Hangup"
+    },
+    "redirect": {
+      "element": "Redirect",
+      "attributes": ["method"],
+      "content": "redirect_url"
+    },
+    "reject": {
+      "element": "Reject",
+      "attributes": ["reason"]
+    },
+    "pause": {
+      "element": "Pause",
+      "attributes": ["length"]
+    },
+    "enqueue": {
+      "element": "Enqueue",
+      "attributes": ["action", "method", "waitUrl", "waitMethod"],
+      "content": "queue_name"
+    },
+    "leave": {
+      "element": "Leave"
+    },
+    "connect": {
+      "element": "Connect",
+      "attributes": ["action", "method"],
+      "children": [
+        {
+          "element": "Room",
+          "content": "room_name"
+        }
+      ]
+    },
+    "pay": {
+      "element": "Pay",
+      "attributes": ["action", "method", "paymentConnector", "tokenType", "chargeAmount", "currency", "description", "validCardTypes", "paymentMethod", "statusCallback", "statusCallbackMethod"]
+    },
+    "refer": {
+      "element": "Refer",
+      "attributes": ["action", "method"],
+      "children": [
+        {
+          "element": "Sip",
+          "content": "sip_address"
+        }
+      ]
+    },
+    "siprec": {
+      "element": "Siprec",
+      "attributes": ["name"],
+      "content": "siprec_url"
+    },
+    "stream": {
+      "element": "Stream",
+      "attributes": ["url", "track", "name"]
+    },
+    "transcription": {
+      "element": "Transcription",
+      "attributes": ["type", "language", "callbackMethod", "callback"]
+    }
+  },
+  "verb_mappings": {
+    "Connect": {
+      "description": "Twilio's Connect verb doesn't have a direct equivalent in Telnyx. For conference functionality, use Dial with Conference.",
+      "attributes": ["action", "method"],
+      "children": ["Room", "VirtualAgent", "Stream", "ConversationRelay"],
+      "special_handling": true
+    },
+    "Dial": {
+      "description": "Connects the current call to another phone number",
+      "attributes": ["callerId", "action", "method", "timeout", "record", "hangupOnStar", "timeLimit"],
+      "children": ["Number", "Sip", "Conference", "Queue"]
+    },
+    "Enqueue": {
+      "description": "Adds the current call to a queue",
+      "attributes": ["action", "method", "waitUrl", "waitMethod"],
+      "content_type": "queue_name"
+    },
+    "Gather": {
+      "description": "Collects digits pressed by the caller",
+      "attributes": ["action", "method", "timeout", "finishOnKey", "numDigits"],
+      "children": ["Say", "Play", "Pause"]
+    },
+    "Hangup": {
+      "description": "Ends the call",
+      "attributes": []
+    },
+    "Leave": {
+      "description": "Leaves the current queue",
+      "attributes": []
+    },
+    "Pause": {
+      "description": "Waits silently for a specified number of seconds",
+      "attributes": ["length"]
+    },
+    "Pay": {
+      "description": "Processes a payment",
+      "attributes": ["action", "method", "paymentConnector", "tokenType", "chargeAmount", "currency", "description", "validCardTypes", "paymentMethod", "statusCallback", "statusCallbackMethod"]
+    },
+    "Play": {
+      "description": "Plays an audio file",
+      "attributes": ["loop"],
+      "content_type": "url"
+    },
+    "Record": {
+      "description": "Records the caller's voice",
+      "attributes": ["action", "method", "timeout", "finishOnKey", "maxLength", "playBeep", "trim", "recordingStatusCallback", "recordingStatusCallbackMethod", "transcribe", "transcribeCallback"]
+    },
+    "Redirect": {
+      "description": "Transfers control to a different TwiML document",
+      "attributes": ["method"],
+      "content_type": "url"
+    },
+    "Refer": {
+      "description": "Transfers the call to a new SIP endpoint",
+      "attributes": ["action", "method"],
+      "children": ["Sip"]
+    },
+    "Reject": {
+      "description": "Rejects an incoming call",
+      "attributes": ["reason"]
+    },
+    "Say": {
+      "description": "Converts text to speech",
+      "attributes": ["voice", "language", "loop"],
+      "content_type": "text"
+    },
+    "Siprec": {
+      "description": "Starts SIP recording",
+      "attributes": ["name"],
+      "content_type": "url"
+    },
+    "Stream": {
+      "description": "Streams audio from the call",
+      "attributes": ["url", "track", "name"]
+    },
+    "Transcription": {
+      "description": "Controls transcription settings",
+      "attributes": ["type", "language", "callbackMethod", "callback"]
+    }
+  }
+}
