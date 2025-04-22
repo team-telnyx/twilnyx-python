@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "twilnyx"
-version = "0.2.0"
+version = "0.3.0"
 authors = [
   { name="Telnyx", email="support@telnyx.com" },
 ]
-description = "A proxy that redirects Twilio SDK calls to Telnyx's API"
+description = "Proxy for TwiML to TeXML"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
