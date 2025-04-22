@@ -23,67 +23,154 @@ call = client.calls.create(
 )
 ```
 
-To use Telnyx instead, just add:
+To use TeXML, just add:
 ```python
 # Add these two lines at the start of your code
 import twilnyx
-twilnyx.use_telnyx(
-    api_key='YOUR_TELNYX_API_KEY',
-    voice_profile_id='YOUR_VOICE_PROFILE_ID',  # From Telnyx Portal > Voice > API Profiles
-    connection_id='YOUR_CONNECTION_ID',  # From Telnyx Portal > Call Control > Apps
-    debug=False  # Set to True for detailed logging
-)
+twilnyx.use_telnyx(debug=True)  # Set to True for detailed logging
 
 # Then use your existing Twilio code as-is!
 from twilio.rest import Client
 ...
 ```
 
+### TeXML Mode
+
+This package uses TeXML exclusively for all requests. No Telnyx API credentials are required, as all requests are handled via TeXML responses.
+
+```python
+# Simple usage with TeXML - loads full mappings by default
+import twilnyx
+twilnyx.use_telnyx()  # No credentials needed, supports all TwiML verbs
+
+# Your existing Twilio code works as-is
+from twilio.rest import Client
+client = Client('TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN')
+```
+
+### Custom Mappings
+
+You can customize the parameter mappings and TeXML templates by providing your own JSON file:
+
+```python
+import twilnyx
+
+# Option 1: Load custom mappings at initialization
+twilnyx.use_telnyx(custom_mappings_file='my_mappings.json')
+
+# Option 2: Load custom mappings at any time
+twilnyx.load_custom_mappings('my_mappings.json')
+
+# View current mappings
+print(twilnyx.MAPPINGS)
+```
+
+Example custom mappings file:
+```json
+{
+  "parameter_mappings": {
+    "To": "destination",
+    "From": "source",
+    "Body": "message_content"
+  },
+  "texml_templates": {
+    "call": {
+      "element": "CustomDial",
+      "attributes": ["callerId"],
+      "children": [
+        {
+          "element": "Number",
+          "content": "destination"
+        }
+      ]
+    }
+  }
+}
+```
+
+### Using All TwiML Verbs
+
+The package includes a full mapping for all TwiML verbs and loads it by default. You can use any TwiML verb by specifying it in the 'verb' parameter:
+
+```python
+import twilnyx
+
+# Initialize Twilnyx - full mappings are loaded by default
+twilnyx.use_telnyx(debug=True)
+
+# Now you can use any TwiML verb by specifying it in the 'verb' parameter
+from twilio.rest import Client
+client = Client('TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN')
+
+# Example: Gather DTMF input
+call = client.calls.create(
+    to='+1234567890',
+    from_='+1987654321',
+    verb='gather',  # Explicitly request Gather verb
+    finish_on_key='#',
+    num_digits=4,
+    prompt_text='Please enter your PIN'
+)
+```
+
+See the `examples/all_verbs_example.py` file for examples of using all supported TwiML verbs, including:
+- `<Connect>`, `<Dial>`, `<Enqueue>`, `<Gather>`, `<Hangup>`, `<Leave>`
+- `<Pause>`, `<Play>`, `<Record>`, `<Redirect>`, `<Refer>`
+- `<Reject>`, `<Say>`, `<Siprec>`, `<Stream>`, `<Transcription>`
+
 ## How It Works
 
 1. **Basic Flow**:
    ```
-   Your Code -> Twilio SDK -> Twilnyx Proxy -> Telnyx API
+   Your Code -> Twilio SDK -> Twilnyx Proxy -> TeXML Response
                                     |
                                     v
                              Parameter Mapping
-                             Add Voice Profile
-                             Convert Response
+                             TeXML Generation
    ```
 
 2. **Complete Flow**:
    ```
    +-------------+    +------------+    +-------------+    +-----------+
-   |  Your Code  |    |Twilio SDK |    |Twilnyx Proxy|    |Telnyx API |
-   |             |--->|           |--->|             |--->|           |
+   |  Your Code  |    |Twilio SDK |    |Twilnyx Proxy|    |   TeXML   |
+   |             |--->|           |--->|             |--->| <Response>|
    +-------------+    +------------+    +-------------+    +-----------+
                                             |
                                             v
                                     +---------------+
                                     | Map Params    |
-                                    | Add Profile   |
-                                    | Map Response  |
+                                    | Generate XML  |
                                     +---------------+
    ```
 
-3. **Webhook Flow**:
+3. **TeXML Flow**:
    ```
-   +-------------+    +------------+    +------------+
-   |  Your App   |    |Telnyx API |    |Your Server |
-   |client.calls |    |           |    |  /voice    |
-   |             |--->|           |--->|            |
-   |             |    |           |    |            |
-   |             |    |           |<---|   TwiML    |
-   +-------------+    +------------+    +------------+
+   +-------------+    +------------+    +-------------+    +-----------+
+   |  Your App   |    |Twilio SDK |    |Twilnyx Proxy|    |   TeXML   |
+   |client.calls |    |           |    |             |    | <Response>|
+   |             |--->|           |--->|             |--->|  <Dial>   |
+   |             |    |           |    |             |    |  <Number> |
+   |             |    |           |    |             |    |  <Play>   |
+   +-------------+    +------------+    +-------------+    +-----------+
    ```
 
-4. **Parameter Mapping**:
+4. **SMS Flow with TeXML**:
+   ```
+   +-------------+    +------------+    +-------------+    +-----------+
+   |  Your Code  |    |Twilio SDK |    |Twilnyx Proxy|    |   TeXML   |
+   |client.msgs  |--->|           |--->|             |--->| <Response>|
+   +-------------+    +------------+    +-------------+    |   <Say>  |
+                                                           +-----------+
+   ```
+
+5. **Parameter Mapping**:
    ```python
    # Twilio format
    {
        'To': '+1234567890',
        'From': '+1987654321',
-       'Url': 'https://your-server.com/voice'
+       'Url': 'https://your-server.com/voice',
+       'MediaUrl': 'https://example.com/audio.mp3'  # Media URL for TeXML
    }
    
    # Converted to Telnyx format
@@ -91,11 +178,12 @@ from twilio.rest import Client
        'to': '+1234567890',
        'from': '+1987654321',
        'webhook_url': 'https://your-server.com/voice',
-       'voice_profile_id': 'your_profile_id'  # Added automatically
+       'voice_profile_id': 'your_profile_id',  # Added automatically
+       'media_urls': 'https://example.com/audio.mp3'  # Used for TeXML generation
    }
    ```
 
-5. **Response Conversion**:
+6. **Response Conversion**:
    ```python
    # Telnyx response
    {
@@ -112,25 +200,20 @@ from twilio.rest import Client
 
 ## Required Setup
 
-1. **Telnyx API Key** (Required):
-   - Create in Telnyx Portal > Auth > API Keys
-   - Used for authentication with Telnyx API
-   - Pass to `use_telnyx()` as `api_key`
+1. **No Telnyx API Credentials Required**:
+   - This version uses TeXML exclusively
+   - No API keys or credentials needed
+   - Just import and use
 
-2. **Telnyx Voice Profile** (Required):
-   - Create in Telnyx Portal > Voice > API Profiles
-   - Used for outbound calling configuration
-   - Pass the ID to `use_telnyx()` as `voice_profile_id`
+2. **TeXML Support**:
+   - All requests are converted to TeXML responses
+   - Supports calls, messages, and media playback
+   - Compatible with Telnyx's XML format
 
-3. **Telnyx Call Control App** (Required for calls):
-   - Create in Telnyx Portal > Call Control > Apps
-   - Configure with your webhook URL
-   - Pass the ID to `use_telnyx()` as `connection_id`
-
-4. **Your Webhook Server**:
-   - Keep using your existing webhook server
-   - It should return TwiML just like with Twilio
-   - No changes needed to your webhooks
+3. **Usage with Existing Code**:
+   - Keep using your existing Twilio code
+   - No changes needed to your application logic
+   - Just add the `twilnyx.use_telnyx()` call
 
 ## Features
 
@@ -142,6 +225,10 @@ from twilio.rest import Client
 - Detailed logging for debugging
 - Support for calls and messages
 - Error handling and reporting
+- Complete TeXML support for all TwiML verbs:
+  - `<Connect>`, `<Dial>`, `<Enqueue>`, `<Gather>`, `<Hangup>`, `<Leave>`
+  - `<Pause>`, `<Pay>`, `<Play>`, `<Record>`, `<Redirect>`, `<Refer>`
+  - `<Reject>`, `<Say>`, `<Siprec>`, `<Stream>`, `<Transcription>`
 
 ## Contributing
 
